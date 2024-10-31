@@ -74,8 +74,8 @@ type TransformOptions struct {
 	Width   int    `json:"width"`
 	Height  int    `json:"height"`
 	Resize  string `json:"resize"`
-	Format  string `json:"format"`
-	Quality int    `json:"quality"`
+	Format  string `json:"format,omitempty"`
+	Quality int    `json:"quality,omitempty"`
 }
 
 type UrlOptions struct {

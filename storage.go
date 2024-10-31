@@ -2,6 +2,7 @@ package storage_go
 
 import (
 	"bufio"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
@@ -56,7 +57,7 @@ func (c *Client) UploadOrUpdateFile(
 
 	// set content-type back to default after request
 	c.clientTransport.header.Set("content-type", "application/json")
-	
+
 	if err != nil {
 		return FileUploadResponse{}, err
 	}
@@ -110,10 +111,21 @@ func (c *Client) MoveFile(bucketId string, sourceKey string, destinationKey stri
 // bucketId string The bucket id
 // filePath path The file path, including the file name. Should be of the format `folder/subfolder/filename.png`
 // expiresIn int The number of seconds before the signed URL expires. Defaults to 60 seconds.
-func (c *Client) CreateSignedUrl(bucketId string, filePath string, expiresIn int) (SignedUrlResponse, error) {
+func (c *Client) CreateSignedUrl(bucketId string, filePath string, expiresIn int, urlOptions ...UrlOptions) (SignedUrlResponse, error) {
+	c.clientTransport.header.Set("Content-Type", "application/json")
+
 	signedURL := c.clientTransport.baseUrl.String() + "/object/sign/" + bucketId + "/" + filePath
 	jsonBody := map[string]interface{}{
 		"expiresIn": expiresIn,
+	}
+
+	var options UrlOptions
+	if len(urlOptions) > 0 {
+		options = urlOptions[0]
+		if options.Transform != nil {
+			transformBytes, _ := json.Marshal(options.Transform)
+			jsonBody["transform"] = json.RawMessage(transformBytes)
+		}
 	}
 
 	req, err := c.NewRequest(http.MethodPost, signedURL, &jsonBody)
