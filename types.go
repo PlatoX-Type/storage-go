@@ -103,3 +103,18 @@ type FileOptions struct {
 	// Defaults to false.
 	Upsert *bool
 }
+
+// CopyFileOptions represents options for copying files
+type CopyFileOptions struct {
+	// DestinationBucket is the target bucket id. If not specified, defaults to source bucket (same bucket copy)
+	DestinationBucket *string
+	// CopyMetadata determines whether to copy metadata from source. Defaults to true.
+	CopyMetadata *bool
+}
+
+// FileCopyResponse represents the response from copying a file
+type FileCopyResponse struct {
+	Key     string `json:"Key"`
+	Message string `json:"message,omitempty"`
+	Error   string `json:"error,omitempty"`
+}

@@ -107,6 +107,44 @@ func (c *Client) MoveFile(bucketId string, sourceKey string, destinationKey stri
 	return response, err
 }
 
+// CopyFile will copy an existing file to a new path in the same bucket or to a different bucket.
+// Supports both same-bucket and cross-bucket copying. Currently only objects up to 5 GB can be copied.
+// bucketId string The source bucket id
+// sourceKey string The source file path, including the file name. Should be of the format `folder/subfolder/filename.png`
+// destinationKey string The destination file path, including the file name. Should be of the format `folder/subfolder/copy-filename.png`
+// options CopyFileOptions Optional parameters for cross-bucket copying and metadata handling
+func (c *Client) CopyFile(bucketId string, sourceKey string, destinationKey string, options ...CopyFileOptions) (FileCopyResponse, error) {
+	jsonBody := map[string]interface{}{
+		"bucketId":       bucketId,
+		"sourceKey":      sourceKey,
+		"destinationKey": destinationKey,
+	}
+
+	// Handle optional parameters
+	if len(options) > 0 {
+		if options[0].DestinationBucket != nil {
+			jsonBody["destinationBucket"] = *options[0].DestinationBucket
+		}
+		if options[0].CopyMetadata != nil {
+			jsonBody["copyMetadata"] = *options[0].CopyMetadata
+		}
+	}
+
+	copyURL := c.clientTransport.baseUrl.String() + "/object/copy"
+	req, err := c.NewRequest(http.MethodPost, copyURL, &jsonBody)
+	if err != nil {
+		return FileCopyResponse{}, err
+	}
+
+	var response FileCopyResponse
+	_, err = c.Do(req, &response)
+	if err != nil {
+		return FileCopyResponse{}, err
+	}
+
+	return response, err
+}
+
 // CreateSignedUrl create a signed URL. Use a signed URL to share a file for a fixed amount of time.
 // bucketId string The bucket id
 // filePath path The file path, including the file name. Should be of the format `folder/subfolder/filename.png`
